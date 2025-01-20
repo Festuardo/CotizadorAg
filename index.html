@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizacion</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .form-section {
+            width: 100%;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #17202a;
+        }
+        label {
+            font-weight: bold;
+        }
+        input, select, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 1rem;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #1028f2;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #f27010;
+        }
+        .result, table {
+            border: 1px solid black;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #f9f9f9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table th, table td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid black;
+        }
+        table th {
+            background-color: #007BFF;
+            color: white;
+        }
+        .actions {
+            display: flex;
+            justify-content: space-between;
+        }
+        .print-container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .print-column {
+            width: 45%;
+        }
+        .totales {
+            font-weight: bold;
+            background-color: #f0f0f0;
+        }
+        @media print {
+            @page {
+                size: legal;
+                margin: 20mm;
+            }
+            body * {
+                visibility: hidden;
+            }
+            .print-area, .print-area * {
+                visibility: visible;
+            }
+            .print-area {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                line-height: 1;
+            }
+            .print-title {
+                text-align: center;
+                font-size: 1.5rem;
+                margin-bottom: 20px;
+                color: #007BFF;
+            }
+            .print-header {
+                text-align: center;
+                font-size: 1.2rem;
+                margin-bottom: 10px;
+                font-weight: bold;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Formulario de Crédito -->
+        <div class="form-section">
+            <h1>COTIZADOR</h1>
+            <form id="credit-form">
+                <label for="nombre">Nombre del Asociado:</label>
+                <input type="text" id="nombre" name="nombre" required placeholder="Ingrese el Nombre">
+
+                <label for="monto">Monto del crédito (Q):</label>
+                <input type="number" id="monto" name="monto" placeholder="Ingrese el Monto" inputmode="numeric" required>
+
+                <label for="plazo">Plazo (meses):</label>
+                <input type="number" id="plazo" name="plazo" placeholder="Ingrese el Plazo" inputmode="numeric" required>
+
+                <label for="tasa">Tasa de Interés Anual (%):</label>
+                <input type="number" id="tasa" name="tasa" placeholder="Ingrese la Tasa de Intereses" inputmode="numeric" required>
+
+                <label for="tipoCuota">Tipo de Cuota:</label>
+                <select id="tipoCuota" name="tipoCuota">
+                    <option value="saldos">Cuota sobre saldos</option>
+                    <option value="nivelada">Cuota nivelada</option>
+                </select>
+
+                <label for="requisitos">Selecciona el Sector del Asociado:</label>
+                <select id="requisitos" name="requisitos" onchange="mostrarRequisitos()">
+                    <option value="">Otro</option>
+                    <option value="Ministerio de Gobernacion">Ministerio de Gobernación</option>
+                    <option value="Ministerio de Educacion">Ministerio de Educación</option>
+                    <option value="Ministerio de Salud">Ministerio de Salud</option>
+                    <option value="Empleado Privado">Empleado Privado</option>
+                    <option value="Comerciante">Comerciante</option>
+                </select>
+
+                <label for="asesor">Selecciona el Asesor:</label>
+                <select id="asesor" name="asesor">
+                    <option value="">Otro</option>
+                    <option value="Franklin Garcia Tel. 3018-0896">Franklin Garcia</option>
+                    <option value="Ivan Lucero Tel 3018-0113">Ivan Lucero</option>
+                    <option value="Dawin Lemus Tel 5755-1414">Dawin Lemus</option>
+                    <option value="Luis Morfin Tel 3018-0592">Luis Morfin</option>
+                    <option value="Allan Valdez Tel 3018-0903">Allan Valdez</option>
+                    <option value="Jorge Lucero Tel 3018-0596">Jorge Lucero</option>
+                </select>
+
+                <div id="requisitosDetalle" class="result"></div>
+
+                <label for="requisitosAdicionales">Requisitos Adicionales:</label>
+                <textarea id="requisitosAdicionales" name="requisitosAdicionales" rows="4" placeholder="Ingrese requisitos adicionales..."></textarea>
+
+                <div class="actions">
+                    <button type="button" onclick="calcular()">Calcular</button>
+                    <button type="button" onclick="limpiar()">Limpiar</button>
+                    <button type="button" onclick="imprimir()">Imprimir</button>
+                </div>
+            </form>
+
+            <div id="resultado" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        let cuotaFija = 0;
+        let primeraCuota = 0;
+        let montoCredito = 0;
+        let plazoCredito = 0;
+        let tasaCredito = 0;
+        let nombreProspecto = '';
+        let requisitosSeleccionados = '';
+        let requisitosAdicionales = '';
+        let asesorSeleccionado = '';
+
+        // Función para formatear números con comas
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        function mostrarRequisitos() {
+            const requisitos = document.getElementById('requisitos').value;
+            let requisitosText = '';
+            
+            switch (requisitos) {
+                case 'Ministerio de Gobernacion':
+                    requisitosText = `
+                        <p>Requisitos para Ministerio de Gobernación:</p>
+                        <ul>
+                            <li>Apertura de cuenta con Q. 100.00.00</li>
+                            <li>DPI</li>
+                            <li>Estados de cuenta de los últimos 3 meses</li>
+                            <li>Constancia Laboral</li>
+                            <li>Constancia Salarial</li>
+                            <li>Récord de Servicio</li>
+                            <li>Régimen Disciplinario</li>
+                        </ul>`;
+                    break;
+                case 'Ministerio de Educacion':
+                    requisitosText = '<p>Requisitos para Ministerio de Educación:</p><li>DPI</li><li>Apertura de Cuenta Q. 100.00</li><li>Estados de cuenta de los ultimos 3 meses</li><li>Constancia Laboral</li><li>Boucher de Pago</li></ul>';
+                    break;
+                case 'Ministerio de Salud':
+                    requisitosText = '<p>Requisitos para Ministerio de Salud:</p><ul><li>DPI</li><li>Apertura de Cuenta Q. 100.00</li><li>Estados de cuenta de los ultimos 3 meses</li><li>Constancia laboral<li>Boucher de Pago</li></li></ul>';
+                    break;
+                case 'Empleado Privado':
+                    requisitosText = '<p>Requisitos para Empleado Privado:</p><ul><li>DPI</li><li>Apertura de Cuenta Q. 100.00</li><li>Constancia laboral</li><li>Estados de cuenta de los ultimos 3 meses</li><li>Presentar Fiador*</li></ul>';
+                    break;
+                case 'Comerciante':
+                    requisitosText = '<p>Requisitos para Comerciante:</p><ul><li>DPI</li><li>Apertura de cuenta Q. 100.00</li><li>Estados de cuenta de los ultimos 6 meses</li><li>Constancia de Ingresos</li><li>Presentar Fiador*</li></ul>';
+                    break;
+            }
+
+            document.getElementById('requisitosDetalle').innerHTML = requisitosText;
+            requisitosSeleccionados = requisitosText;
+        }
+
+        function calcular() {
+            const monto = parseFloat(document.getElementById('monto').value);
+            const plazo = parseInt(document.getElementById('plazo').value);
+            const tasa = parseFloat(document.getElementById('tasa').value) / 100;
+            const tipoCuota = document.getElementById('tipoCuota').value;
+            asesorSeleccionado = document.getElementById('asesor').value;
+            requisitosAdicionales = document.getElementById('requisitosAdicionales').value || '';
+
+            montoCredito = monto;
+            plazoCredito = plazo;
+            tasaCredito = tasa;
+            nombreProspecto = document.getElementById('nombre').value;
+
+            let resultado = '';
+            if (tipoCuota === 'saldos') {
+                resultado = generarTablaCuotaSobreSaldos(monto, plazo, tasa);
+            } else {
+                resultado = generarTablaCuotaNivelada(monto, plazo, tasa);
+            }
+
+            // Encabezado dividido en dos columnas para la impresión
+            resultado = `
+                <div class="print-area">
+                    <h2 class="print-header">Cotización Tonantel, R.L.</h2>
+                    <div class="print-container">
+                        <div class="print-column">
+                            <p><strong>Nombre:</strong> ${nombreProspecto}</p>
+                            <p><strong>Monto:</strong> Q${formatNumber(monto.toFixed(2))}</p>
+                            <p><strong>Plazo:</strong> ${plazo} meses</p>
+                            <p><strong>Tasa de Interés:</strong> ${(tasa * 100).toFixed(2)}%</p>
+                            <p><strong>Asesor:</strong> ${asesorSeleccionado}</p>
+                        </div>
+                        <div class="print-column">
+                            <p><strong>Requisitos:</strong> ${requisitosSeleccionados}</p>
+                            <p><strong>Requisitos Adicionales:</strong> ${requisitosAdicionales}</p>
+                        </div>
+                    </div>
+                    <br />
+                    ${resultado}
+                </div>
+            `;
+
+            document.getElementById('resultado').innerHTML = resultado;
+        }
+
+        function generarTablaCuotaSobreSaldos(monto, plazo, tasa) {
+            let saldo = monto;
+            let cuotaInteres, cuotaCapital, cuotaTotal;
+            let tasaMensual = tasa / 12;
+            let totalInteres = 0, totalAmortizacion = 0, totalCuota = 0;
+            let tabla = `<table>
+                <tr>
+                    <th>Mes</th>
+                    <th>Saldo Inicial</th>
+                    <th>Interés</th>
+                    <th>Amortización</th>
+                    <th>Cuota</th>
+                    <th>Saldo Final</th>
+                </tr>`;
+
+            for (let mes = 1; mes <= plazo; mes++) {
+                cuotaInteres = saldo * tasaMensual;
+                cuotaCapital = monto / plazo;
+                cuotaTotal = cuotaInteres + cuotaCapital;
+                saldo -= cuotaCapital;
+
+                // Guardar la primera cuota para usarla en el cálculo de capacidad de pago
+                if (mes === 1) {
+                    primeraCuota = cuotaTotal;
+                }
+
+                totalInteres += cuotaInteres;
+                totalAmortizacion += cuotaCapital;
+                totalCuota += cuotaTotal;
+
+                tabla += `<tr>
+                    <td>${mes}</td>
+                    <td>Q${formatNumber(monto.toFixed(2))}</td>
+                    <td>Q${formatNumber(cuotaInteres.toFixed(2))}</td>
+                    <td>Q${formatNumber(cuotaCapital.toFixed(2))}</td>
+                    <td>Q${formatNumber(cuotaTotal.toFixed(2))}</td>
+                    <td>Q${formatNumber(saldo.toFixed(2))}</td>
+                </tr>`;
+            }
+
+            tabla += `<tr class="totales">
+                <td>Total</td>
+                <td></td> <!-- Saldo Inicial no tiene suma -->
+                <td>Q${formatNumber(totalInteres.toFixed(2))}</td>
+                <td>Q${formatNumber(totalAmortizacion.toFixed(2))}</td>
+                <td>Q${formatNumber(totalCuota.toFixed(2))}</td>
+                <td></td> <!-- Saldo Final no tiene suma -->
+            </tr>`;
+
+            tabla += `</table>`;
+            return tabla;
+        }
+
+        function generarTablaCuotaNivelada(monto, plazo, tasa) {
+            let saldo = monto;
+            let tasaMensual = tasa / 12;
+            cuotaFija = (monto * tasaMensual) / (1 - Math.pow(1 + tasaMensual, -plazo));
+            let totalInteres = 0, totalAmortizacion = 0, totalCuota = 0;
+            let tabla = `<table>
+                <tr>
+                    <th>Mes</th>
+                    <th>Saldo Inicial</th>
+                    <th>Interés</th>
+                    <th>Amortización</th>
+                    <th>Cuota</th>
+                    <th>Saldo Final</th>
+                </tr>`;
+
+            for (let mes = 1; mes <= plazo; mes++) {
+                let cuotaInteres = saldo * tasaMensual;
+                let cuotaCapital = cuotaFija - cuotaInteres;
+                saldo -= cuotaCapital;
+
+                totalInteres += cuotaInteres;
+                totalAmortizacion += cuotaCapital;
+                totalCuota += cuotaFija;
+
+                tabla += `<tr>
+                    <td>${mes}</td>
+                    <td>Q${formatNumber(saldo.toFixed(2))}</td>
+                    <td>Q${formatNumber(cuotaInteres.toFixed(2))}</td>
+                    <td>Q${formatNumber(cuotaCapital.toFixed(2))}</td>
+                    <td>Q${formatNumber(cuotaFija.toFixed(2))}</td>
+                    <td>Q${formatNumber(saldo.toFixed(2))}</td>
+                </tr>`;
+            }
+
+            tabla += `<tr class="totales">
+                <td>Total</td>
+                <td></td> <!-- Saldo Inicial no tiene suma -->
+                <td>Q${formatNumber(totalInteres.toFixed(2))}</td>
+                <td>Q${formatNumber(totalAmortizacion.toFixed(2))}</td>
+                <td>Q${formatNumber(totalCuota.toFixed(2))}</td>
+                <td></td> <!-- Saldo Final no tiene suma -->
+            </tr>`;
+
+            tabla += `</table>`;
+            return tabla;
+        }
+
+        function limpiar() {
+            document.getElementById('credit-form').reset();
+            document.getElementById('resultado').innerHTML = '';
+            document.getElementById('requisitosDetalle').innerHTML = '';
+            cuotaFija = 0;
+            primeraCuota = 0;
+            montoCredito = 0;
+            plazoCredito = 0;
+            tasaCredito = 0;
+            nombreProspecto = '';
+            requisitosSeleccionados = '';
+            requisitosAdicionales = '';
+            asesorSeleccionado = '';
+        }
+
+        function imprimir() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
