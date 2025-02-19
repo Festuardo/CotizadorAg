@@ -334,7 +334,6 @@
             let tabla = `<table>
                 <tr>
                     <th>Mes</th>
-                    <th>Saldo Inicial</th>
                     <th>Interés</th>
                     <th>Amortización</th>
                     <th>Cuota</th>
@@ -352,7 +351,6 @@
 
                 tabla += `<tr>
                     <td>${mes}</td>
-                    <td>Q${formatNumber(saldo.toFixed(2))}</td>
                     <td>Q${formatNumber(cuotaInteres.toFixed(2))}</td>
                     <td>Q${formatNumber(cuotaCapital.toFixed(2))}</td>
                     <td>Q${formatNumber(cuotaFija.toFixed(2))}</td>
