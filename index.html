@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            line-height: 1.4;
+            line-height: 1.0;
             margin: 0;
             padding: 15px;
             color: #444;
@@ -284,15 +284,20 @@
 
         <div class="print-only print-header">
             <img src="images/LOGO.png" alt="Logo Cooperativa Tonantel" class="logo">
-            <h1>Cooperativa Tonantel, R.L.</h1>
-            <h2>Cotización de Préstamo</h2>
+            <div class="print-header-text">
+                <h1>Cooperativa Tonantel, R.L.</h1>
+                <h2>Cotización de Préstamo</h2>
+            </div>
         </div>
 
         <div class="print-only print-details">
+            <p><strong>Fecha:</strong> <span id="print-date"></span></p>
             <p><strong>Nombre:</strong> <span id="print-name"></span></p>
             <p><strong>Monto:</strong> <span id="print-amount"></span></p>
             <p><strong>Plazo:</strong> <span id="print-term"></span> meses</p>
             <p><strong>Tasa de interés:</strong> <span id="print-rate"></span>% anual</p>
+            <p><strong>Tipo de cuota:</strong> <span id="print-payment-type"></span></p>
+            <p><strong>Sector:</strong> <span id="print-sector"></span></p>
             <p><strong>Asesor:</strong> <span id="print-advisor"></span></p>
         </div>
 
@@ -318,6 +323,32 @@
                 <li>Constancia Laboral</li>
                 <li>Boucher de Pago</li>
             </ul>
+        </div>
+
+        <div id="print-requirements-privado" class="print-only print-requirements" style="display: none;">
+            <h3>Requisitos para Empleado Privado:</h3>
+            <ul>
+                <li>Apertura de cuenta Q. 100.00</li>
+                <li>DPI</li>
+                <li>Estados de cuenta de los últimos 3 meses</li>
+                <li>Constancia Laboral</li>
+                <li>Boucher de Pago</li>
+                <li><strong>Presentar Fiador*</strong></li>
+            </ul>
+            <p style="font-size: 11px; margin-top: 3px; font-style: italic;">* El fiador debe presentar los mismos requisitos</p>
+        </div>
+
+        <div id="print-requirements-comerciante" class="print-only print-requirements" style="display: none;">
+            <h3>Requisitos para Comerciante:</h3>
+            <ul>
+                <li>Apertura de cuenta Q. 100.00</li>
+                <li>DPI</li>
+                <li>Estados de cuenta de los últimos 6 meses</li>
+                <li>Constancia de Ingresos</li>
+                <li>RTU o Patente de Comercio</li>
+                <li><strong>Presentar Fiador*</strong></li>
+            </ul>
+            <p style="font-size: 11px; margin-top: 3px; font-style: italic;">* El fiador debe presentar los mismos requisitos</p>
         </div>
 
         <div id="print-additional-requirements" class="print-only print-requirements" style="display: none;">
@@ -377,6 +408,8 @@
                                 <option value="">Seleccione (opcional)...</option>
                                 <option value="gobernacion">Ministerio de Gobernación</option>
                                 <option value="educacion">Ministerio de Educación</option>
+                                <option value="privado">Empleado Privado</option>
+                                <option value="comerciante">Comerciante</option>
                                 <option value="otro">Otro</option>
                             </select>
                         </div>
@@ -407,6 +440,32 @@
                     </ul>
                 </div>
 
+                <div id="requirements-privado" class="requirements" style="display: none;">
+                    <h3>Requisitos para Empleado Privado:</h3>
+                    <ul>
+                        <li>Apertura de cuenta Q. 100.00</li>
+                        <li>DPI</li>
+                        <li>Estados de cuenta de los últimos 3 meses</li>
+                        <li>Constancia Laboral</li>
+                        <li>Boucher de Pago</li>
+                        <li><strong>Presentar Fiador*</strong></li>
+                    </ul>
+                    <p style="font-size: 12px; margin-top: 5px; font-style: italic;">* El fiador debe presentar los mismos requisitos</p>
+                </div>
+
+                <div id="requirements-comerciante" class="requirements" style="display: none;">
+                    <h3>Requisitos para Comerciante:</h3>
+                    <ul>
+                        <li>Apertura de cuenta Q. 100.00</li>
+                        <li>DPI</li>
+                        <li>Estados de cuenta de los últimos 6 meses</li>
+                        <li>Constancia de Ingresos</li>
+                        <li>RTU o Patente de Comercio</li>
+                        <li><strong>Presentar Fiador*</strong></li>
+                    </ul>
+                    <p style="font-size: 12px; margin-top: 5px; font-style: italic;">* El fiador debe presentar los mismos requisitos</p>
+                </div>
+
                 <div class="form-group">
                     <label for="additional-requirements">Requisitos adicionales (opcional):</label>
                     <textarea id="additional-requirements" name="additional-requirements" rows="3"></textarea>
@@ -419,7 +478,7 @@
                         <option value="franklin">Franklin García - Tel: 3018 0896</option>
                         <option value="luis">Luis Morfín - Tel: 3018 0592</option>
                         <option value="dawin">Dawin Lemus - Tel: 5755 1414</option>
-                        <option value="ivan">Ivan Lucero - Tel: 3018 0113</option>
+                        <option value="ivan">Iván Lucero - Tel: 3018 0113</option>
                     </select>
                 </div>
 
@@ -460,22 +519,30 @@
             const sectorSelect = document.getElementById('sector');
             const gobernacionReq = document.getElementById('requirements-gobernacion');
             const educacionReq = document.getElementById('requirements-educacion');
+            const privadoReq = document.getElementById('requirements-privado');
+            const comercianteReq = document.getElementById('requirements-comerciante');
             const printGobernacionReq = document.getElementById('print-requirements-gobernacion');
             const printEducacionReq = document.getElementById('print-requirements-educacion');
+            const printPrivadoReq = document.getElementById('print-requirements-privado');
+            const printComercianteReq = document.getElementById('print-requirements-comerciante');
             const printAdditionalReq = document.getElementById('print-additional-requirements');
 
             sectorSelect.addEventListener('change', function() {
+                // Ocultar todos los requisitos primero
                 gobernacionReq.style.display = 'none';
                 educacionReq.style.display = 'none';
-                printGobernacionReq.style.display = 'none';
-                printEducacionReq.style.display = 'none';
+                privadoReq.style.display = 'none';
+                comercianteReq.style.display = 'none';
                 
+                // Mostrar solo los requisitos correspondientes
                 if (this.value === 'gobernacion') {
                     gobernacionReq.style.display = 'block';
-                    printGobernacionReq.style.display = 'block';
                 } else if (this.value === 'educacion') {
                     educacionReq.style.display = 'block';
-                    printEducacionReq.style.display = 'block';
+                } else if (this.value === 'privado') {
+                    privadoReq.style.display = 'block';
+                } else if (this.value === 'comerciante') {
+                    comercianteReq.style.display = 'block';
                 }
             });
 
@@ -511,12 +578,26 @@
                 const advisorSelect = document.getElementById('advisor');
                 const advisorText = advisorSelect.value ? advisorSelect.options[advisorSelect.selectedIndex].text : 'No especificado';
 
-                // Mostrar requisitos adicionales en versión imprimible
+                // Control de requisitos para impresión
+                printGobernacionReq.style.display = 'none';
+                printEducacionReq.style.display = 'none';
+                printPrivadoReq.style.display = 'none';
+                printComercianteReq.style.display = 'none';
+                printAdditionalReq.style.display = 'none';
+
+                if (sector === 'gobernacion') {
+                    printGobernacionReq.style.display = 'block';
+                } else if (sector === 'educacion') {
+                    printEducacionReq.style.display = 'block';
+                } else if (sector === 'privado') {
+                    printPrivadoReq.style.display = 'block';
+                } else if (sector === 'comerciante') {
+                    printComercianteReq.style.display = 'block';
+                }
+
                 if (additionalRequirements.trim() !== '') {
                     document.getElementById('print-additional-requirements-content').innerHTML = '<p>' + additionalRequirements.replace(/\n/g, '<br>') + '</p>';
                     printAdditionalReq.style.display = 'block';
-                } else {
-                    printAdditionalReq.style.display = 'none';
                 }
 
                 // Calcular amortización según tipo de cuota
@@ -621,8 +702,12 @@
                 document.getElementById('print-btn').disabled = true;
                 gobernacionReq.style.display = 'none';
                 educacionReq.style.display = 'none';
+                privadoReq.style.display = 'none';
+                comercianteReq.style.display = 'none';
                 printGobernacionReq.style.display = 'none';
                 printEducacionReq.style.display = 'none';
+                printPrivadoReq.style.display = 'none';
+                printComercianteReq.style.display = 'none';
                 printAdditionalReq.style.display = 'none';
             }
         });
