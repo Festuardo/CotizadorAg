@@ -502,7 +502,9 @@
                 const amountVal = parseFloat(amount.value);
                 const termVal = parseInt(term.value);
                 const annualRate = parseFloat(rate.value);
-
+                const paymentType = document.getElementById('payment-type').value;
+                const paymentTypeText = document.getElementById('payment-type').options[document.getElementById('payment-type').selectedIndex].text;
+                const sector = document.getElementById('sector').value;
                 const sectorText = sector ? document.getElementById('sector').options[document.getElementById('sector').selectedIndex].text : 'No especificado';
                 const monthlyRate = annualRate / 100 / 12;
                 const additionalRequirements = document.getElementById('additional-requirements').value;
