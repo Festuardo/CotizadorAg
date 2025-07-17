@@ -31,7 +31,6 @@
         .logo {
             max-width: 180px;
             margin-right: 20px;
-            align-self: flex-start; /* Alinea a la izquierda */
         }
         .title {
             flex-grow: 1;
@@ -181,10 +180,10 @@
             border-bottom: 1px solid #e0e6ed;
         }
         .print-header img {
-            max-width: 180px;
+            max-width: 200px;
             float: left; /* Posición a la izquierda */
-            margin-right: 30px;
-            margin-bottom: 15px;
+            margin-right: 15px;
+            margin-bottom: 10px;
         }
         .print-details {
             margin-bottom: 15px;
@@ -290,13 +289,10 @@
         </div>
 
         <div class="print-only print-details">
-            <p><strong>Fecha:</strong> <span id="print-date"></span></p>
             <p><strong>Nombre:</strong> <span id="print-name"></span></p>
             <p><strong>Monto:</strong> <span id="print-amount"></span></p>
             <p><strong>Plazo:</strong> <span id="print-term"></span> meses</p>
             <p><strong>Tasa de interés:</strong> <span id="print-rate"></span>% anual</p>
-            <p><strong>Tipo de cuota:</strong> <span id="print-payment-type"></span></p>
-            <p><strong>Sector:</strong> <span id="print-sector"></span></p>
             <p><strong>Asesor:</strong> <span id="print-advisor"></span></p>
         </div>
 
@@ -506,9 +502,7 @@
                 const amountVal = parseFloat(amount.value);
                 const termVal = parseInt(term.value);
                 const annualRate = parseFloat(rate.value);
-                const paymentType = document.getElementById('payment-type').value;
-                const paymentTypeText = document.getElementById('payment-type').options[document.getElementById('payment-type').selectedIndex].text;
-                const sector = document.getElementById('sector').value;
+
                 const sectorText = sector ? document.getElementById('sector').options[document.getElementById('sector').selectedIndex].text : 'No especificado';
                 const monthlyRate = annualRate / 100 / 12;
                 const additionalRequirements = document.getElementById('additional-requirements').value;
