@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotizador Cooperativa Tonantel, R.L.</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -30,7 +29,7 @@
             flex-wrap: wrap;
         }
         .logo {
-            max-width: 250px;
+            max-width: 180px;
             margin-right: 20px;
         }
         .title {
@@ -116,12 +115,6 @@
         .btn-secondary:hover {
             background-color: #e05252;
         }
-        .btn-download {
-            background-color: #4CAF50;
-        }
-        .btn-download:hover {
-            background-color: #3e8e41;
-        }
         .requirements {
             background-color: #f0f5ff;
             padding: 12px;
@@ -188,9 +181,9 @@
         }
         .print-header img {
             max-width: 200px;
-            float: left;
-            margin-right: 30px;
-            margin-bottom: 15px;
+            float: left; /* Posición a la izquierda */
+            margin-right: 15px;
+            margin-bottom: 10px;
         }
         .print-details {
             margin-bottom: 15px;
@@ -233,7 +226,7 @@
             body {
                 padding: 10px;
                 font-size: 12px;
-                line-height: 1.0;
+                line-height: 1.3;
                 background-color: white;
             }
             .container {
@@ -270,7 +263,7 @@
                 text-align: center;
             }
             .logo {
-                margin: 0 0 10px 0;
+                margin: 0 0 15px 0;
             }
             table {
                 width: 100%;
@@ -492,7 +485,6 @@
                 <div class="form-group">
                     <button type="button" id="generate-btn" class="btn">Generar Cotización</button>
                     <button type="button" id="print-btn" class="btn" disabled>Imprimir</button>
-                    <button type="button" id="download-btn" class="btn btn-download" disabled>Descargar PDF</button>
                     <button type="reset" id="clear-btn" class="btn btn-secondary">Limpiar</button>
                 </div>
             </form>
@@ -557,7 +549,6 @@
             // Generar tabla de amortización
             document.getElementById('generate-btn').addEventListener('click', generateAmortization);
             document.getElementById('print-btn').addEventListener('click', printQuote);
-            document.getElementById('download-btn').addEventListener('click', downloadPDF);
             document.getElementById('clear-btn').addEventListener('click', clearForm);
 
             function generateAmortization() {
@@ -672,7 +663,6 @@
                 // Mostrar tabla
                 document.getElementById('amortization-table').style.display = 'table';
                 document.getElementById('print-btn').disabled = false;
-                document.getElementById('download-btn').disabled = false;
 
                 // Preparar datos para impresión
                 document.getElementById('print-name').textContent = name || 'No especificado';
@@ -707,24 +697,9 @@
                 window.print();
             }
 
-            function downloadPDF() {
-                const element = document.querySelector('.container');
-                const opt = {
-                    margin: 10,
-                    filename: 'cotizacion_tonantel.pdf',
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2 },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                };
-
-                // Generar PDF
-                html2pdf().set(opt).from(element).save();
-            }
-
             function clearForm() {
                 document.getElementById('amortization-table').style.display = 'none';
                 document.getElementById('print-btn').disabled = true;
-                document.getElementById('download-btn').disabled = true;
                 gobernacionReq.style.display = 'none';
                 educacionReq.style.display = 'none';
                 privadoReq.style.display = 'none';
