@@ -152,6 +152,11 @@
             border: 1px solid #e0e6ed;
             padding: 8px 12px;
             text-align: center;
+            position: relative;
+        }
+        /* Corrección para el borde derecho en la última columna */
+        th:last-child, td:last-child {
+            border-right: 1px solid #e0e6ed;
         }
         th {
             background-color: #f0f5ff;
@@ -170,6 +175,10 @@
             background-color: #e1f0ff !important;
             color: #2a5cb5;
         }
+        /* Asegurar que la fila total tenga bordes completos */
+        .total-row td {
+            border-bottom: 1px solid #e0e6ed;
+        }
         .print-only {
             display: none;
         }
@@ -181,7 +190,7 @@
         }
         .print-header img {
             max-width: 200px;
-            float: left; /* Posición a la izquierda */
+            float: left;
             margin-right: 15px;
             margin-bottom: 10px;
         }
@@ -217,6 +226,10 @@
             padding-left: 18px;
         }
         @media print {
+            @page {
+                size: 8.5in 13in; /* Tamaño oficio */
+                margin: 15mm;
+            }
             .no-print {
                 display: none;
             }
@@ -228,18 +241,21 @@
                 font-size: 12px;
                 line-height: 1.3;
                 background-color: white;
+                width: 100%;
             }
             .container {
                 box-shadow: none;
                 padding: 10px;
+                width: 100%;
+                max-width: 100%;
             }
             table {
                 font-size: 11px;
-                width: auto !important;
+                width: 100% !important;
                 margin: 15px auto;
             }
             th, td {
-                padding: 6px 10px;
+                padding: 6px 8px;
             }
             .print-header {
                 margin-bottom: 10px;
@@ -485,6 +501,7 @@
                 <div class="form-group">
                     <button type="button" id="generate-btn" class="btn">Generar Cotización</button>
                     <button type="button" id="print-btn" class="btn" disabled>Imprimir</button>
+                    <button type="button" id="pdf-btn" class="btn" disabled>Exportar a PDF</button>
                     <button type="reset" id="clear-btn" class="btn btn-secondary">Limpiar</button>
                 </div>
             </form>
@@ -508,8 +525,15 @@
         </div>
     </div>
 
+    <!-- Incluir jsPDF desde CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Cargar jsPDF correctamente
+            const { jsPDF } = window.jspdf;
+            
             // Formatear números como moneda GTQ
             function formatCurrency(amount) {
                 return 'Q ' + parseFloat(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -546,9 +570,25 @@
                 }
             });
 
+            // Variables para el cálculo automático
+            let calculationTimeout;
+            const calculationDelay = 500; // medio segundo de retraso después de la última entrada
+
+            // Configurar eventos para cálculo automático
+            document.getElementById('amount').addEventListener('input', scheduleCalculation);
+            document.getElementById('term').addEventListener('input', scheduleCalculation);
+            document.getElementById('rate').addEventListener('input', scheduleCalculation);
+            document.getElementById('payment-type').addEventListener('change', scheduleCalculation);
+
+            function scheduleCalculation() {
+                clearTimeout(calculationTimeout);
+                calculationTimeout = setTimeout(generateAmortization, calculationDelay);
+            }
+
             // Generar tabla de amortización
             document.getElementById('generate-btn').addEventListener('click', generateAmortization);
             document.getElementById('print-btn').addEventListener('click', printQuote);
+            document.getElementById('pdf-btn').addEventListener('click', exportToPDF);
             document.getElementById('clear-btn').addEventListener('click', clearForm);
 
             function generateAmortization() {
@@ -663,6 +703,7 @@
                 // Mostrar tabla
                 document.getElementById('amortization-table').style.display = 'table';
                 document.getElementById('print-btn').disabled = false;
+                document.getElementById('pdf-btn').disabled = false;
 
                 // Preparar datos para impresión
                 document.getElementById('print-name').textContent = name || 'No especificado';
@@ -697,9 +738,170 @@
                 window.print();
             }
 
+            function exportToPDF() {
+                // Crear nuevo documento PDF en tamaño oficio (8.5x13 pulgadas)
+                const doc = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'in',
+                    format: [8.5, 13]
+                });
+                
+                // Configuración inicial
+                doc.setFont('helvetica');
+                doc.setFontSize(10);
+                
+                // Logo y encabezado
+                // Nota: Para incluir el logo real, necesitarías tener la imagen base64 o una URL accesible
+                // doc.addImage('data:image/png;base64,...', 'PNG', 0.5, 0.5, 2, 1);
+                doc.setFontSize(14);
+                doc.setTextColor(40, 53, 147);
+                doc.text('Cooperativa Tonantel, R.L.', 0.5, 0.8);
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                doc.text('Cotización de Préstamo', 0.5, 1.0);
+                
+                // Línea separadora
+                doc.setDrawColor(200, 200, 200);
+                doc.line(0.5, 1.2, 8.0, 1.2);
+                
+                // Detalles del préstamo
+                doc.setFontSize(10);
+                const today = new Date();
+                doc.text(`Fecha: ${today.toLocaleDateString('es-GT')}`, 0.5, 1.5);
+                doc.text(`Nombre: ${document.getElementById('name').value || 'No especificado'}`, 0.5, 1.7);
+                doc.text(`Monto: ${document.getElementById('print-amount').textContent}`, 0.5, 1.9);
+                doc.text(`Plazo: ${document.getElementById('term').value} meses`, 0.5, 2.1);
+                doc.text(`Tasa de interés: ${document.getElementById('rate').value}% anual`, 0.5, 2.3);
+                doc.text(`Tipo de cuota: ${document.getElementById('payment-type').options[document.getElementById('payment-type').selectedIndex].text}`, 0.5, 2.5);
+                doc.text(`Sector: ${document.getElementById('sector').value ? document.getElementById('sector').options[document.getElementById('sector').selectedIndex].text : 'No especificado'}`, 0.5, 2.7);
+                doc.text(`Asesor: ${document.getElementById('advisor').value ? document.getElementById('advisor').options[document.getElementById('advisor').selectedIndex].text : 'No especificado'}`, 0.5, 2.9);
+                
+                // Tabla de amortización
+                doc.setFontSize(11);
+                doc.setTextColor(40, 53, 147);
+                doc.text('Tabla de Amortización', 0.5, 3.2);
+                
+                const headers = [
+                    "No.",
+                    "Cuota",
+                    "Interés",
+                    "Capital",
+                    "Saldo"
+                ];
+                
+                const rows = [];
+                const tableRows = document.querySelectorAll('#amortization-body tr');
+                
+                tableRows.forEach(row => {
+                    if (row.classList.contains('total-row')) return;
+                    
+                    const cells = row.querySelectorAll('td');
+                    const rowData = [
+                        cells[0].textContent,
+                        cells[1].textContent,
+                        cells[2].textContent,
+                        cells[3].textContent,
+                        cells[4].textContent
+                    ];
+                    rows.push(rowData);
+                });
+                
+                // Agregar totales
+                const totalRow = document.querySelector('.total-row');
+                if (totalRow) {
+                    const totalCells = totalRow.querySelectorAll('td');
+                    rows.push([
+                        '',
+                        totalCells[0].textContent,
+                        totalCells[1].textContent,
+                        totalCells[2].textContent,
+                        ''
+                    ]);
+                }
+                
+                doc.autoTable({
+                    startY: 3.5,
+                    head: [headers],
+                    body: rows,
+                    margin: { left: 0.5, right: 0.5 },
+                    styles: { 
+                        fontSize: 8, 
+                        cellPadding: 0.1,
+                        lineColor: [224, 230, 237], // Color del borde
+                        lineWidth: 0.1
+                    },
+                    headStyles: { 
+                        fillColor: [240, 245, 255], 
+                        textColor: [58, 86, 115],
+                        cellPadding: 0.2,
+                        lineWidth: 0.1
+                    },
+                    alternateRowStyles: { 
+                        fillColor: [248, 250, 252],
+                        lineWidth: 0.1
+                    },
+                    tableWidth: 'wrap',
+                    // Asegurar bordes completos
+                    didDrawCell: function(data) {
+                        // Dibujar borde derecho para la última celda de cada fila
+                        if (data.column.index === data.table.columns.length - 1) {
+                            doc.setDrawColor(224, 230, 237);
+                            doc.setLineWidth(0.1);
+                            doc.line(
+                                data.cell.x + data.cell.width,
+                                data.cell.y,
+                                data.cell.x + data.cell.width,
+                                data.cell.y + data.cell.height
+                            );
+                        }
+                    }
+                });
+                
+                // Requisitos
+                const requirementsElements = document.querySelectorAll('.print-requirements');
+                let requirementsY = doc.lastAutoTable.finalY + 0.3;
+                
+                requirementsElements.forEach(el => {
+                    if (el.style.display !== 'none' && requirementsY < 12) {
+                        doc.setFontSize(11);
+                        doc.setTextColor(40, 53, 147);
+                        doc.text(el.querySelector('h3').textContent, 0.5, requirementsY);
+                        
+                        doc.setFontSize(9);
+                        doc.setTextColor(0, 0, 0);
+                        
+                        const items = el.querySelectorAll('li');
+                        items.forEach((item, index) => {
+                            doc.text(`• ${item.textContent}`, 0.7, requirementsY + 0.2 + (index * 0.2));
+                        });
+                        
+                        const note = el.querySelector('p');
+                        if (note) {
+                            doc.setFontSize(8);
+                            doc.text(note.textContent, 0.7, requirementsY + 0.2 + (items.length * 0.2));
+                            requirementsY += 0.2 + (items.length * 0.2) + 0.2;
+                        } else {
+                            requirementsY += 0.2 + (items.length * 0.2);
+                        }
+                        
+                        requirementsY += 0.3;
+                    }
+                });
+                
+                // Pie de página
+                doc.setFontSize(8);
+                doc.setTextColor(100, 100, 100);
+                doc.text('Documento generado por el Cotizador de Préstamos de Cooperativa Tonantel, R.L.', 4.25, 12.5, { align: 'center' });
+                
+                // Guardar PDF
+                const fileName = `Cotización_${document.getElementById('name').value || 'prestamo'}_${today.toISOString().slice(0,10)}.pdf`;
+                doc.save(fileName);
+            }
+
             function clearForm() {
                 document.getElementById('amortization-table').style.display = 'none';
                 document.getElementById('print-btn').disabled = true;
+                document.getElementById('pdf-btn').disabled = true;
                 gobernacionReq.style.display = 'none';
                 educacionReq.style.display = 'none';
                 privadoReq.style.display = 'none';
