@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotizador Cooperativa Tonantel, R.L.</title>
     <style>
+        /* (Estilos sin cambios) */
         body {
             font-family: 'Arial', sans-serif;
             line-height: 1.0;
@@ -291,16 +292,18 @@
                 font-size: 12px;
             }
         }
-        .custom-advisor {
-            display: none;
-            margin-top: 8px;
+        .note {
+            font-size: 12px;
+            color: #4a6b8a;
+            font-style: italic;
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header no-print">
-            <img src="images/logo.png" class="logo">
+            <img src="images/logo.png" alt="Logo Cooperativa Tonantel" class="logo">
             <div class="title">
                 <h1>Cooperativa Tonantel, R.L.</h1>
                 <h2>Cotizador de Préstamos</h2>
@@ -496,26 +499,18 @@
                     <textarea id="additional-requirements" name="additional-requirements" rows="3"></textarea>
                 </div>
 
+                <!-- Datos del asesor personalizados y persistentes -->
                 <div class="advisor-info">
                     <h3>Asesor:</h3>
-                    <select id="advisor" name="advisor">
-                        <option value="">Seleccione...</option>
-                        <option value="franklin">Franklin García - Tel: 3018 0896</option>
-                        <option value="luis">Luis Morfín - Tel: 3018 0592</option>
-                        <option value="dawin">Dawin Lemus - Tel: 5755 1414</option>
-                        <option value="ivan">Iván Lucero - Tel: 3018 0113</option>
-                        <option value="otro">Agregar Asesor</option>
-                    </select>
-                    <div id="custom-advisor" class="custom-advisor">
-                        <div class="form-group">
-                            <label for="advisor-name">Nombre del Asesor:</label>
-                            <input type="text" id="advisor-name" name="advisor-name">
-                        </div>
-                        <div class="form-group">
-                            <label for="advisor-phone">Teléfono del Asesor:</label>
-                            <input type="text" id="advisor-phone" name="advisor-phone">
-                        </div>
+                    <div class="form-group">
+                        <label for="advisor-name">Nombre del asesor:</label>
+                        <input type="text" id="advisor-name" name="advisor-name" placeholder="Ingrese su nombre">
                     </div>
+                    <div class="form-group">
+                        <label for="advisor-phone">Teléfono del asesor:</label>
+                        <input type="text" id="advisor-phone" name="advisor-phone" placeholder="Ingrese su teléfono">
+                    </div>
+                    <p class="note">Estos datos se guardarán automáticamente en su navegador.</p>
                 </div>
 
                 <div class="form-group">
@@ -551,6 +546,34 @@
                 return 'Q ' + parseFloat(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             }
 
+            // Referencias a los campos del asesor
+            const advisorNameInput = document.getElementById('advisor-name');
+            const advisorPhoneInput = document.getElementById('advisor-phone');
+
+            // Cargar datos guardados del asesor desde localStorage
+            function loadAdvisorData() {
+                const savedName = localStorage.getItem('advisorName');
+                const savedPhone = localStorage.getItem('advisorPhone');
+                if (savedName) advisorNameInput.value = savedName;
+                if (savedPhone) advisorPhoneInput.value = savedPhone;
+            }
+
+            // Guardar datos del asesor en localStorage
+            function saveAdvisorData() {
+                localStorage.setItem('advisorName', advisorNameInput.value);
+                localStorage.setItem('advisorPhone', advisorPhoneInput.value);
+            }
+
+            // Cargar al iniciar
+            loadAdvisorData();
+
+            // Guardar automáticamente cuando los campos pierdan el foco o cambien
+            advisorNameInput.addEventListener('change', saveAdvisorData);
+            advisorPhoneInput.addEventListener('change', saveAdvisorData);
+            // También guardar al salir del campo (por si el usuario no presiona Enter)
+            advisorNameInput.addEventListener('blur', saveAdvisorData);
+            advisorPhoneInput.addEventListener('blur', saveAdvisorData);
+
             // Mostrar requisitos según sector
             const sectorSelect = document.getElementById('sector');
             const gobernacionReq = document.getElementById('requirements-gobernacion');
@@ -579,18 +602,6 @@
                     privadoReq.style.display = 'block';
                 } else if (this.value === 'comerciante') {
                     comercianteReq.style.display = 'block';
-                }
-            });
-
-            // Control para mostrar/ocultar campos de asesor personalizado
-            const advisorSelect = document.getElementById('advisor');
-            const customAdvisorDiv = document.getElementById('custom-advisor');
-            
-            advisorSelect.addEventListener('change', function() {
-                if (this.value === 'otro') {
-                    customAdvisorDiv.style.display = 'block';
-                } else {
-                    customAdvisorDiv.style.display = 'none';
                 }
             });
 
@@ -624,18 +635,12 @@
                 const monthlyRate = annualRate / 100 / 12;
                 const additionalRequirements = document.getElementById('additional-requirements').value;
                 
-                // Obtener información del asesor
+                // Obtener información del asesor (directamente de los campos)
+                const advisorName = advisorNameInput.value.trim();
+                const advisorPhone = advisorPhoneInput.value.trim();
                 let advisorText = 'No especificado';
-                const advisorValue = advisorSelect.value;
-                
-                if (advisorValue === 'otro') {
-                    const advisorName = document.getElementById('advisor-name').value;
-                    const advisorPhone = document.getElementById('advisor-phone').value;
-                    if (advisorName || advisorPhone) {
-                        advisorText = advisorName + (advisorPhone ? ' - Tel: ' + advisorPhone : '');
-                    }
-                } else if (advisorValue) {
-                    advisorText = advisorSelect.options[advisorSelect.selectedIndex].text;
+                if (advisorName || advisorPhone) {
+                    advisorText = advisorName + (advisorPhone ? ' - Tel: ' + advisorPhone : '');
                 }
 
                 // Control de requisitos para impresión
@@ -758,6 +763,16 @@
             }
 
             function clearForm() {
+                // Limpiar solo los campos del préstamo, no los datos del asesor
+                document.getElementById('name').value = '';
+                document.getElementById('amount').value = '';
+                document.getElementById('term').value = '';
+                document.getElementById('rate').value = '';
+                document.getElementById('payment-type').value = 'level';
+                document.getElementById('sector').value = '';
+                document.getElementById('additional-requirements').value = '';
+                
+                // Ocultar requisitos y tabla
                 document.getElementById('amortization-table').style.display = 'none';
                 document.getElementById('print-btn').disabled = true;
                 gobernacionReq.style.display = 'none';
@@ -769,7 +784,6 @@
                 printPrivadoReq.style.display = 'none';
                 printComercianteReq.style.display = 'none';
                 printAdditionalReq.style.display = 'none';
-                customAdvisorDiv.style.display = 'none';
             }
         });
     </script>
